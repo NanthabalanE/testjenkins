@@ -1,1 +1,48 @@
-exports = async function(changeEvent) {var name = "nantha"}
+exports = async function(changeEvent) {
+  
+  const serviceName = "Sample";
+  const database = "gamer";
+  const collection = context.services.get(serviceName).db(database).collection("user");
+  const targetCollection = context.services.get(serviceName).db(database).collection("userlevels");
+
+  // Get the "fullDocument" present in the Insert/Replace/Update ChangeEvents
+   const fullDocument = changeEvent.fullDocument;
+  try {
+    const response =  await collection.aggregate(getMatchDocumentPipeline(fullDocument)).toArray();
+    response.forEach((res) => {
+      targetCollection.replaceOne({"_id":fullDocument._id},res,{upsert: true})
+      console.log("res",JSON.stringify(res));
+    });
+    console.log("Response",JSON.stringify(response));
+  } catch(err) {
+    console.log("error performing mongodb write: ", err.message);
+  }
+};
+function getMatchDocumentPipeline(fullDocument){
+  return [
+  {
+    $match:
+      {
+        _id: fullDocument._id,
+      },
+  },
+  {
+    $lookup: {
+      from: "games",
+      localField: "_id",
+      foreignField: "userid",
+      as: "games",
+    },
+  },
+  {
+    $project: {
+      _id: 1,
+      username: 1,
+      "games._id": 1,
+      "games.name": 1,
+      "games.level": 1,
+    },
+  },
+];
+  
+}
