@@ -13,7 +13,7 @@ exports = async function(changeEvent) {
       targetCollection.replaceOne({"_id":fullDocument._id},res,{upsert: true})
       console.log("res",JSON.stringify(res));
     });
-    console.log("Respons",JSON.stringify(response));
+    console.log("Response Result",JSON.stringify(response));
   } catch(err) {
     console.log("error performing mongodb write: ", err.message);
   }
